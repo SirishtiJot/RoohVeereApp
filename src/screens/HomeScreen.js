@@ -37,7 +37,8 @@ const LUXURY_PRODUCTS = [
   { id: '8', name: 'Waves', type: 'For Her', prices: { '50 ML': 'PKR 2,399', '100 ML': 'PKR 4,290' }, image: require('../../assets/waves.png') }, 
 ];
 
-export default function HomeScreen() {
+// ✅ Added `navigation` prop
+export default function HomeScreen({ navigation }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [showSearch, setShowSearch] = useState(false); 
   const [searchQuery, setSearchQuery] = useState('');   
@@ -98,7 +99,12 @@ export default function HomeScreen() {
     const currentPrice = item.prices[currentSize]; 
 
     return (
-      <View style={styles.productCard}>
+      // ✅ Wrap entire card in TouchableOpacity to navigate on tap
+      <TouchableOpacity
+        style={styles.productCard}
+        activeOpacity={0.85}
+        onPress={() => navigation.navigate('ProductDescription', { productId: item.id })}
+      >
         {/* 🛠️ Safe Physical Image Container */}
         <View style={styles.imageContainer}>
           <Image 
@@ -115,23 +121,26 @@ export default function HomeScreen() {
         <View style={styles.sizeSelectorContainer}>
           <TouchableOpacity 
             style={[styles.sizeTab, currentSize === '50 ML' && styles.activeSizeTab]} 
-            onPress={() => changeSize(item.id, '50 ML')}
+            onPress={(e) => { e.stopPropagation(); changeSize(item.id, '50 ML'); }}
           >
             <Text style={[styles.sizeTabText, currentSize === '50 ML' && styles.activeSizeTabText]}>50ML</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
             style={[styles.sizeTab, currentSize === '100 ML' && styles.activeSizeTab]} 
-            onPress={() => changeSize(item.id, '100 ML')}
+            onPress={(e) => { e.stopPropagation(); changeSize(item.id, '100 ML'); }}
           >
             <Text style={[styles.sizeTabText, currentSize === '100 ML' && styles.activeSizeTabText]}>100ML</Text>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.addBtn} onPress={() => alert(`${item.name} (${currentSize}) added to bag!`)}>
+        <TouchableOpacity
+          style={styles.addBtn}
+          onPress={(e) => { e.stopPropagation(); alert(`${item.name} (${currentSize}) added to bag!`); }}
+        >
           <Text style={styles.addBtnText}>ADD TO BAG</Text>
         </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -256,7 +265,7 @@ const styles = StyleSheet.create({
   /* 🛠️ UPDATED CRITICAL STYLING FOR PRODUCT IMAGES */
   productCard: { backgroundColor: '#FFF', width: CARD_WIDTH, marginBottom: 25, padding: 10, borderWidth: 1, borderColor: '#F0F0F0' },
   imageContainer: { width: '100%', height: 140, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
-  productImage: { width: CARD_WIDTH - 20, height: 140 }, // Forcing exact rendering pixels
+  productImage: { width: CARD_WIDTH - 20, height: 140 },
 
   pType: { fontSize: 9, color: '#888', textTransform: 'uppercase', letterSpacing: 1 },
   pName: { fontSize: 14, color: '#000', fontWeight: '400', marginTop: 2, marginBottom: 4 },

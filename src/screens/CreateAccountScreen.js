@@ -1,5 +1,3 @@
-// src/screens/CreateAccountScreen.js
-
 import React, { useState } from 'react';
 import {
   View,
@@ -12,43 +10,43 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+import Icon from '@expo/vector-icons/Ionicons';
+
+// ✅ Cross-platform alert that works on web AND mobile
+const showAlert = (title, message, onConfirm) => {
+  if (Platform.OS === 'web') {
+    window.alert(`${title}\n\n${message}`);
+    if (onConfirm) onConfirm();
+  } else {
+    Alert.alert(title, message, onConfirm ? [{ text: 'Continue', onPress: onConfirm }] : undefined);
+  }
+};
 
 export default function CreateAccountScreen({ navigation }) {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [name, setName]         = useState('');
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleCreateAccount = () => {
-
     if (!name.trim() || !email.trim() || !password.trim()) {
-      Alert.alert('Missing Fields', 'Please fill in all fields before continuing.');
+      showAlert('Missing Fields', 'Please fill in all fields before continuing.');
       return;
     }
-
     if (!email.includes('@')) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      showAlert('Invalid Email', 'Please enter a valid email address.');
       return;
     }
-
     if (password.length < 6) {
-      Alert.alert('Weak Password', 'Password must be at least 6 characters long.');
+      showAlert('Weak Password', 'Password must be at least 6 characters long.');
       return;
     }
 
-    Alert.alert(
+    showAlert(
       'Account Created!',
       `Welcome, ${name}! Your account has been created.`,
-      [
-        {
-          text: 'Continue',
-          onPress: () => navigation.navigate('Home'),
-        },
-      ]
+      () => navigation.replace('Home')
     );
-  };
-
-  const handleGuestLogin = () => {
-    navigation.navigate('GuestLogin');
   };
 
   return (
@@ -59,61 +57,89 @@ export default function CreateAccountScreen({ navigation }) {
       <ScrollView
         contentContainerStyle={styles.inner}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-
-        <Text style={styles.title}>Create Account</Text>
-        <Text style={styles.subtitle}>Join us to get started</Text>
-
-        <Text style={styles.label}>Full Name</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. Sirishti Chhabria"
-          placeholderTextColor="#aaa"
-          value={name}
-          onChangeText={setName}
-          autoCapitalize="words"
-        />
-
-        <Text style={styles.label}>Email Address</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. hello@example.com"
-          placeholderTextColor="#aaa"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        <Text style={styles.label}>Password</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Min. 6 characters"
-          placeholderTextColor="#aaa"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={handleCreateAccount}
-        >
-          <Text style={styles.primaryButtonText}>Create Account</Text>
+        {/* BACK BUTTON */}
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Icon name="arrow-back" size={22} color="#FFF" />
         </TouchableOpacity>
 
+        {/* BRAND */}
+        <View style={styles.brandContainer}>
+          <Text style={styles.brandName}>ROOH VEERE</Text>
+          <Text style={styles.brandTagline}>CREATE YOUR ACCOUNT</Text>
+        </View>
+
+        {/* FULL NAME */}
+        <View style={styles.inputWrapper}>
+          <Icon name="person-outline" size={18} color="#888" style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Full Name"
+            placeholderTextColor="#666"
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+          />
+        </View>
+
+        {/* EMAIL */}
+        <View style={styles.inputWrapper}>
+          <Icon name="mail-outline" size={18} color="#888" style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Email Address"
+            placeholderTextColor="#666"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
+
+        {/* PASSWORD */}
+        <View style={styles.inputWrapper}>
+          <Icon name="lock-closed-outline" size={18} color="#888" style={styles.inputIcon} />
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            placeholder="Password (min. 6 characters)"
+            placeholderTextColor="#666"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+            <Icon name={showPassword ? 'eye-outline' : 'eye-off-outline'} size={18} color="#888" />
+          </TouchableOpacity>
+        </View>
+
+        {/* CREATE BUTTON */}
+        <TouchableOpacity style={styles.createBtn} onPress={handleCreateAccount}>
+          <Text style={styles.createBtnText}>CREATE ACCOUNT</Text>
+        </TouchableOpacity>
+
+        {/* DIVIDER */}
         <View style={styles.dividerRow}>
           <View style={styles.dividerLine} />
           <Text style={styles.dividerText}>or</Text>
           <View style={styles.dividerLine} />
         </View>
 
+        {/* GUEST */}
         <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={handleGuestLogin}
+          style={styles.guestBtn}
+          onPress={() => navigation.navigate('GuestLogin')}
         >
-          <Text style={styles.secondaryButtonText}>Continue as Guest</Text>
+          <Text style={styles.guestBtnText}>CONTINUE AS GUEST</Text>
         </TouchableOpacity>
+
+        {/* ALREADY HAVE ACCOUNT */}
+        <View style={styles.loginRow}>
+          <Text style={styles.loginText}>Already have an account? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.loginLink}>Sign In</Text>
+          </TouchableOpacity>
+        </View>
 
       </ScrollView>
     </KeyboardAvoidingView>
@@ -121,81 +147,38 @@ export default function CreateAccountScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
+  container: { flex: 1, backgroundColor: '#111' },
   inner: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 28,
-    paddingVertical: 40,
+    paddingHorizontal: 30,
+    paddingVertical: 60,
   },
-  title: {
-    fontSize: 30,
-    fontWeight: '700',
-    color: '#1a1a1a',
-    marginBottom: 6,
+  backBtn: { position: 'absolute', top: 54, left: 20, padding: 4, zIndex: 10 },
+  brandContainer: { alignItems: 'center', marginBottom: 40, marginTop: 20 },
+  brandName: { fontSize: 26, fontWeight: '300', color: '#FFF', letterSpacing: 10, marginBottom: 10 },
+  brandTagline: { fontSize: 10, color: '#888', letterSpacing: 4, textTransform: 'uppercase' },
+  inputWrapper: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E1E1E',
+    borderWidth: 1, borderColor: '#2A2A2A', marginBottom: 14, paddingHorizontal: 14, height: 54,
   },
-  subtitle: {
-    fontSize: 15,
-    color: '#777',
-    marginBottom: 32,
+  inputIcon: { marginRight: 10 },
+  input: { flex: 1, color: '#FFF', fontSize: 14, fontWeight: '300', letterSpacing: 0.5 },
+  eyeBtn: { padding: 4 },
+  createBtn: {
+    backgroundColor: '#FFF', height: 54, justifyContent: 'center',
+    alignItems: 'center', marginTop: 10, marginBottom: 24,
   },
-  label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#444',
-    marginBottom: 6,
-    marginTop: 14,
+  createBtnText: { color: '#000', fontSize: 13, fontWeight: '600', letterSpacing: 4 },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: '#2A2A2A' },
+  dividerText: { marginHorizontal: 12, color: '#555', fontSize: 13 },
+  guestBtn: {
+    borderWidth: 1, borderColor: '#333', height: 54,
+    justifyContent: 'center', alignItems: 'center', marginBottom: 30,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: '#1a1a1a',
-    backgroundColor: '#fafafa',
-  },
-  primaryButton: {
-    backgroundColor: '#6C3FCF',
-    borderRadius: 12,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginTop: 28,
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#e0e0e0',
-  },
-  dividerText: {
-    marginHorizontal: 12,
-    color: '#aaa',
-    fontSize: 13,
-  },
-  secondaryButton: {
-    borderWidth: 1.5,
-    borderColor: '#6C3FCF',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    color: '#6C3FCF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  guestBtnText: { color: '#888', fontSize: 12, letterSpacing: 3 },
+  loginRow: { flexDirection: 'row', justifyContent: 'center' },
+  loginText: { color: '#666', fontSize: 13 },
+  loginLink: { color: '#FFF', fontSize: 13, fontWeight: '600' },
 });
