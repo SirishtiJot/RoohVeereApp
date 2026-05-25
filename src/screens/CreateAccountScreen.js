@@ -35,7 +35,6 @@ export default function CreateAccountScreen({ navigation }) {
       return;
     }
 
-    // ✅ THIS IS THE FIX — navigates to Home after tapping Continue
     Alert.alert(
       'Account Created!',
       `Welcome, ${name}! Your account has been created.`,

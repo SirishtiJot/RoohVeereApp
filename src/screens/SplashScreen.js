@@ -164,5 +164,11 @@ const styles = StyleSheet.create({
   droplet: { position: 'absolute', backgroundColor: 'rgba(255, 255, 255, 0.45)' },
   textContainer: { position: 'absolute', bottom: height * 0.20, alignItems: 'center' },
   brandName: { fontSize: 34, fontWeight: '300', color: '#FFF', letterSpacing: 10 },
-  tagline: { fontSize: 11, color: '#fcfcfc', letterSpacing: 4, marginTop: 12, textTransform: 'uppercase' },
+   tagline: {
+    fontSize: 11,
+    color: '#fcfcfc',
+    letterSpacing: 4,
+    marginTop: 12,
+    textTransform: 'uppercase'
+  }
 });
