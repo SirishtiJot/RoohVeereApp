@@ -6,13 +6,15 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
 import Icon from '@expo/vector-icons/Ionicons';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth } from '../firebase';
 
-// ✅ Cross-platform alert that works on web AND mobile
 const showAlert = (title, message, onConfirm) => {
   if (Platform.OS === 'web') {
     window.alert(`${title}\n\n${message}`);
@@ -22,13 +24,29 @@ const showAlert = (title, message, onConfirm) => {
   }
 };
 
-export default function CreateAccountScreen({ navigation }) {
-  const [name, setName]         = useState('');
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+const getFirebaseError = (code) => {
+  switch (code) {
+    case 'auth/email-already-in-use':
+      return { title: 'Email Already Registered', message: 'An account with this email already exists. Please sign in instead.' };
+    case 'auth/invalid-email':
+      return { title: 'Invalid Email', message: 'Please enter a valid email address.' };
+    case 'auth/weak-password':
+      return { title: 'Weak Password', message: 'Password must be at least 6 characters long.' };
+    case 'auth/network-request-failed':
+      return { title: 'No Internet', message: 'Please check your internet connection and try again.' };
+    default:
+      return { title: 'Registration Failed', message: 'Something went wrong. Please try again.' };
+  }
+};
 
-  const handleCreateAccount = () => {
+export default function CreateAccountScreen({ navigation }) {
+  const [name, setName]                 = useState('');
+  const [email, setEmail]               = useState('');
+  const [password, setPassword]         = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading]           = useState(false);
+
+  const handleCreateAccount = async () => {
     if (!name.trim() || !email.trim() || !password.trim()) {
       showAlert('Missing Fields', 'Please fill in all fields before continuing.');
       return;
@@ -42,11 +60,22 @@ export default function CreateAccountScreen({ navigation }) {
       return;
     }
 
-    showAlert(
-      'Account Created!',
-      `Welcome, ${name}! Your account has been created.`,
-      () => navigation.replace('Home')
-    );
+    setLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      // Save display name to Firebase profile
+      await updateProfile(userCredential.user, { displayName: name.trim() });
+      showAlert(
+        'Account Created!',
+        `Welcome, ${name.trim()}! Your account has been created.`,
+        () => navigation.replace('Home')
+      );
+    } catch (error) {
+      const { title, message } = getFirebaseError(error.code);
+      showAlert(title, message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -114,8 +143,15 @@ export default function CreateAccountScreen({ navigation }) {
         </View>
 
         {/* CREATE BUTTON */}
-        <TouchableOpacity style={styles.createBtn} onPress={handleCreateAccount}>
-          <Text style={styles.createBtnText}>CREATE ACCOUNT</Text>
+        <TouchableOpacity
+          style={[styles.createBtn, loading && styles.createBtnDisabled]}
+          onPress={handleCreateAccount}
+          disabled={loading}
+        >
+          {loading
+            ? <ActivityIndicator color="#000" />
+            : <Text style={styles.createBtnText}>CREATE ACCOUNT</Text>
+          }
         </TouchableOpacity>
 
         {/* DIVIDER */}
@@ -148,12 +184,7 @@ export default function CreateAccountScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#111' },
-  inner: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 30,
-    paddingVertical: 60,
-  },
+  inner: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 30, paddingVertical: 60 },
   backBtn: { position: 'absolute', top: 54, left: 20, padding: 4, zIndex: 10 },
   brandContainer: { alignItems: 'center', marginBottom: 40, marginTop: 20 },
   brandName: { fontSize: 26, fontWeight: '300', color: '#FFF', letterSpacing: 10, marginBottom: 10 },
@@ -169,6 +200,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF', height: 54, justifyContent: 'center',
     alignItems: 'center', marginTop: 10, marginBottom: 24,
   },
+  createBtnDisabled: { backgroundColor: '#555' },
   createBtnText: { color: '#000', fontSize: 13, fontWeight: '600', letterSpacing: 4 },
   dividerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
   dividerLine: { flex: 1, height: 1, backgroundColor: '#2A2A2A' },

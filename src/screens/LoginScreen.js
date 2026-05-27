@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,22 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
 import Icon from '@expo/vector-icons/Ionicons';
+import {
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  fetchSignInMethodsForEmail,
+} from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { auth } from '../firebase';
+
+const SAVED_EMAIL_KEY    = '@roohveere_saved_email';
+const SAVED_PASSWORD_KEY = '@roohveere_saved_password';
 
 const showAlert = (title, message, onConfirm) => {
   if (Platform.OS === 'web') {
@@ -22,11 +33,25 @@ const showAlert = (title, message, onConfirm) => {
 };
 
 export default function LoginScreen({ navigation }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail]               = useState('');
+  const [password, setPassword]         = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading]           = useState(false);
 
-  const handleLogin = () => {
+  // Load saved credentials on mount
+  useEffect(() => {
+    const loadSaved = async () => {
+      try {
+        const savedEmail    = await AsyncStorage.getItem(SAVED_EMAIL_KEY);
+        const savedPassword = await AsyncStorage.getItem(SAVED_PASSWORD_KEY);
+        if (savedEmail)    setEmail(savedEmail);
+        if (savedPassword) setPassword(savedPassword);
+      } catch (_) {}
+    };
+    loadSaved();
+  }, []);
+
+  const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       showAlert('Missing Fields', 'Please enter your email and password.');
       return;
@@ -35,7 +60,68 @@ export default function LoginScreen({ navigation }) {
       showAlert('Invalid Email', 'Please enter a valid email address.');
       return;
     }
-    navigation.replace('Home');
+
+    setLoading(true);
+    try {
+      // Step 1: check if account exists for this email
+      const methods = await fetchSignInMethodsForEmail(auth, email.trim());
+      if (methods.length === 0) {
+        showAlert(
+          'Account Not Found',
+          'No account exists with this email. Please create an account first.'
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: attempt sign in
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+
+      // Step 3: save credentials on success
+      await AsyncStorage.setItem(SAVED_EMAIL_KEY, email.trim());
+      await AsyncStorage.setItem(SAVED_PASSWORD_KEY, password);
+
+      navigation.replace('Home');
+
+    } catch (error) {
+      console.log('Firebase auth error:', error.code, error.message);
+      switch (error.code) {
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          showAlert('Wrong Password', 'The password you entered is incorrect. Please try again.');
+          break;
+        case 'auth/invalid-email':
+          showAlert('Invalid Email', 'Please enter a valid email address.');
+          break;
+        case 'auth/too-many-requests':
+          showAlert('Too Many Attempts', 'Account temporarily locked due to too many failed attempts. Reset your password or try again later.');
+          break;
+        case 'auth/network-request-failed':
+          showAlert('No Internet', 'Please check your internet connection and try again.');
+          break;
+        default:
+          showAlert('Login Failed', `Error: ${error.code}\n\nPlease try again.`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      showAlert('Enter Email', 'Type your email address above first, then tap Forgot Password.');
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email.trim());
+      showAlert('Email Sent', `A password reset link has been sent to ${email.trim()}.`);
+    } catch (error) {
+      if (error.code === 'auth/user-not-found') {
+        showAlert('Account Not Found', 'No account exists with this email address.');
+      } else {
+        showAlert('Error', 'Could not send reset email. Please try again.');
+      }
+    }
   };
 
   return (
@@ -81,12 +167,19 @@ export default function LoginScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.forgotBtn}>
+        <TouchableOpacity style={styles.forgotBtn} onPress={handleForgotPassword}>
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
-          <Text style={styles.loginBtnText}>LOGIN</Text>
+        <TouchableOpacity
+          style={[styles.loginBtn, loading && styles.loginBtnDisabled]}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          {loading
+            ? <ActivityIndicator color="#000" />
+            : <Text style={styles.loginBtnText}>LOGIN</Text>
+          }
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.guestBtn} onPress={() => navigation.navigate('GuestLogin')}>
@@ -120,6 +213,7 @@ const styles = StyleSheet.create({
   forgotBtn: { alignSelf: 'flex-end', marginBottom: 30 },
   forgotText: { color: '#888', fontSize: 12, letterSpacing: 1 },
   loginBtn: { backgroundColor: '#FFF', height: 54, justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
+  loginBtnDisabled: { backgroundColor: '#555' },
   loginBtnText: { color: '#000', fontSize: 13, fontWeight: '600', letterSpacing: 4 },
   guestBtn: { alignItems: 'center', marginBottom: 30 },
   guestText: { color: '#FFF', fontSize: 13, letterSpacing: 1, textDecorationLine: 'underline' },

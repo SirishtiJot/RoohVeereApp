@@ -42,7 +42,8 @@ const LUXURY_PRODUCTS = [
 export default function HomeScreen({ navigation }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [showSearch, setShowSearch] = useState(false); 
-  const [searchQuery, setSearchQuery] = useState('');   
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const { addToBag } = useCart();
   const [productSizes, setProductSizes] = useState({
     '1': '50 ML', '2': '50 ML', '3': '50 ML', '4': '50 ML',
@@ -73,10 +74,16 @@ export default function HomeScreen({ navigation }) {
     setProductSizes(prev => ({ ...prev, [productId]: size }));
   };
 
-  const filteredProducts = LUXURY_PRODUCTS.filter(product => 
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.type.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProducts = LUXURY_PRODUCTS.filter(product => {
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.type.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      selectedCategory === 'all' ||
+      (selectedCategory === 'him' && product.type === 'For Him') ||
+      (selectedCategory === 'her' && product.type === 'For Her');
+    return matchesSearch && matchesCategory;
+  });
 
   // SLIDESHOW CARD RENDER
   const renderHeroSlide = ({ item }) => (
@@ -152,10 +159,6 @@ export default function HomeScreen({ navigation }) {
     <View style={styles.container}>
      {/* HEADER */}
       <View style={styles.headerBar}>
-        <TouchableOpacity>
-          <Icon name="menu-sharp" size={24} color="#000" />
-        </TouchableOpacity>
-        
         <Text style={styles.headerLogo}>ROOH VEERE</Text>
         
         <View style={styles.headerRightIcons}>
@@ -215,19 +218,31 @@ export default function HomeScreen({ navigation }) {
         {/* CATEGORIES */}
         <Text style={styles.sectionTitle}>SELECT COLLECTION</Text>
         <View style={styles.categoryContainer}>
-          <TouchableOpacity style={styles.catCardBlack}>
-            <Icon name="man-outline" size={24} color="#FFF" />
-            <Text style={styles.catTextWhite}>FOR HIM</Text>
+          <TouchableOpacity
+            style={[styles.catCard, selectedCategory === 'him' ? styles.catCardActive : styles.catCardInactive]}
+            onPress={() => setSelectedCategory(selectedCategory === 'him' ? 'all' : 'him')}
+          >
+            <Icon name="man-outline" size={24} color={selectedCategory === 'him' ? '#FFF' : '#000'} />
+            <Text style={[styles.catText, selectedCategory === 'him' ? styles.catTextActive : styles.catTextInactive]}>FOR HIM</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.catCardWhite}>
-            <Icon name="woman-outline" size={24} color="#000" />
-            <Text style={styles.catTextBlack}>FOR HER</Text>
+          <TouchableOpacity
+            style={[styles.catCard, selectedCategory === 'her' ? styles.catCardActive : styles.catCardInactive]}
+            onPress={() => setSelectedCategory(selectedCategory === 'her' ? 'all' : 'her')}
+          >
+            <Icon name="woman-outline" size={24} color={selectedCategory === 'her' ? '#FFF' : '#000'} />
+            <Text style={[styles.catText, selectedCategory === 'her' ? styles.catTextActive : styles.catTextInactive]}>FOR HER</Text>
           </TouchableOpacity>
         </View>
 
         {/* PRODUCT GRID */}
         <Text style={styles.sectionTitle}>
-          {searchQuery ? `SEARCH RESULTS (${filteredProducts.length})` : `EXCLUSIVES (${LUXURY_PRODUCTS.length})`}
+          {searchQuery
+            ? `SEARCH RESULTS (${filteredProducts.length})`
+            : selectedCategory === 'him'
+            ? `FOR HIM (${filteredProducts.length})`
+            : selectedCategory === 'her'
+            ? `FOR HER (${filteredProducts.length})`
+            : `EXCLUSIVES (${LUXURY_PRODUCTS.length})`}
         </Text>
         
         {filteredProducts.length > 0 ? (
@@ -253,7 +268,7 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFFFF' },
   headerBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 50, paddingBottom: 15, borderBottomWidth: 1, borderColor: '#F0F0F0' },
-  headerLogo: { fontSize: 20, fontWeight: '300', color: '#000', letterSpacing: 5, marginLeft: 25 },
+  headerLogo: { fontSize: 20, fontWeight: '300', color: '#000', letterSpacing: 5 },
   headerRightIcons: { flexDirection: 'row', alignItems: 'center' },
   searchBarContainer: { paddingHorizontal: 20, paddingVertical: 10, backgroundColor: '#FFF', borderBottomWidth: 1, borderColor: '#F5F5F5' },
   searchInput: { height: 40, borderWidth: 1, borderColor: '#000', paddingHorizontal: 15, fontSize: 13, color: '#000', letterSpacing: 1, fontWeight: '300' },
@@ -274,10 +289,12 @@ const styles = StyleSheet.create({
   
   sectionTitle: { fontSize: 12, fontWeight: '600', color: '#000', letterSpacing: 3, marginLeft: 20, marginTop: 25, marginBottom: 15 },
    categoryContainer: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 25 },
-  catCardBlack: { width: CARD_WIDTH, height: 90, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
-  catCardWhite: { width: CARD_WIDTH, height: 90, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#000' },
-  catTextWhite: { color: '#FFF', fontSize: 12, fontWeight: '500', letterSpacing: 2, marginTop: 6 },
-  catTextBlack: { color: '#000', fontSize: 12, fontWeight: '500', letterSpacing: 2, marginTop: 6 },
+  catCard: { width: CARD_WIDTH, height: 90, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
+  catCardActive: { backgroundColor: '#000', borderColor: '#000' },
+  catCardInactive: { backgroundColor: '#FFF', borderColor: '#000' },
+  catText: { fontSize: 12, fontWeight: '500', letterSpacing: 2, marginTop: 6 },
+  catTextActive: { color: '#FFF' },
+  catTextInactive: { color: '#000' },
   listWrapper: { paddingHorizontal: 10 },
   gridRow: { justifyContent: 'space-between', paddingHorizontal: 10 },
   
