@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useCart } from '../context/CartContext';
 import { 
   StyleSheet, 
   Text, 
@@ -42,7 +43,7 @@ export default function HomeScreen({ navigation }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [showSearch, setShowSearch] = useState(false); 
   const [searchQuery, setSearchQuery] = useState('');   
-
+  const { addToBag } = useCart();
   const [productSizes, setProductSizes] = useState({
     '1': '50 ML', '2': '50 ML', '3': '50 ML', '4': '50 ML',
     '5': '50 ML', '6': '50 ML', '7': '50 ML', '8': '50 ML'
@@ -134,30 +135,48 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          style={styles.addBtn}
-          onPress={(e) => { e.stopPropagation(); alert(`${item.name} (${currentSize}) added to bag!`); }}
-        >
-          <Text style={styles.addBtnText}>ADD TO BAG</Text>
-        </TouchableOpacity>
+        <TouchableOpacity 
+  style={styles.addBtn} 
+  onPress={() => {
+    addToBag(item, currentSize); // 👈 Real add function
+    alert(`${item.name} (${currentSize}) added to bag!`);
+  }}
+>
+  <Text style={styles.addBtnText}>ADD TO BAG</Text>
+</TouchableOpacity>
       </TouchableOpacity>
     );
   };
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
+     {/* HEADER */}
       <View style={styles.headerBar}>
-        <TouchableOpacity><Icon name="menu-sharp" size={24} color="#000" /></TouchableOpacity>
+        <TouchableOpacity>
+          <Icon name="menu-sharp" size={24} color="#000" />
+        </TouchableOpacity>
+        
         <Text style={styles.headerLogo}>ROOH VEERE</Text>
+        
         <View style={styles.headerRightIcons}>
-          <TouchableOpacity onPress={() => { setShowSearch(!showSearch); setSearchQuery(''); }} style={{ marginRight: 15 }}>
+          {/* Search Button */}
+          <TouchableOpacity 
+            onPress={() => { setShowSearch(!showSearch); setSearchQuery(''); }} 
+            style={{ marginRight: 15 }}
+          >
             <Icon name={showSearch ? "close-sharp" : "search-sharp"} size={23} color="#000" />
           </TouchableOpacity>
-          <TouchableOpacity><Icon name="bag-handle-outline" size={24} color="#000" /></TouchableOpacity>
+          
+          {/* Bag / Cart Button */}
+          <TouchableOpacity
+            style={styles.bagBtn}
+            onPress={() => navigation.navigate('CartScreen')}
+          >
+            <Icon name="bag-handle-outline" size={24} color="#000" />
+          </TouchableOpacity>
         </View>
-      </View>
 
+      </View>
       {/* SEARCH BAR */}
       {showSearch && (
         <View style={styles.searchBarContainer}>
@@ -254,7 +273,7 @@ const styles = StyleSheet.create({
   dot: { height: 8, borderRadius: 4, marginHorizontal: 4 },
   
   sectionTitle: { fontSize: 12, fontWeight: '600', color: '#000', letterSpacing: 3, marginLeft: 20, marginTop: 25, marginBottom: 15 },
-  categoryContainer: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 25 },
+   categoryContainer: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 25 },
   catCardBlack: { width: CARD_WIDTH, height: 90, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
   catCardWhite: { width: CARD_WIDTH, height: 90, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#000' },
   catTextWhite: { color: '#FFF', fontSize: 12, fontWeight: '500', letterSpacing: 2, marginTop: 6 },

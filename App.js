@@ -9,11 +9,14 @@ import HomeScreen from './src/screens/HomeScreen';
 import CreateAccountScreen from './src/screens/CreateAccountScreen';
 import GuestLoginScreen from './src/screens/GuestLoginScreen';
 import ProductDescriptionScreen from './src/screens/ProductDescriptionScreen';
-
+import CartScreen from './src/screens/CartScreen';
+import { CartProvider } from './src/context/CartContext';
+import CheckoutScreen from './src/screens/CheckoutScreen';
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
+    <CartProvider>
     <NavigationContainer>
       <StatusBar barStyle="light-content" />
 
@@ -33,9 +36,12 @@ export default function App() {
         <Stack.Screen name="GuestLogin" component={GuestLoginScreen} />
 
         {/* Product Description Screen */}
-        <Stack.Screen name="ProductDescription" component={ProductDescriptionScreen} />
+        <Stack.Screen  name="ProductDescription" component={ProductDescriptionScreen} />
+        <Stack.Screen name = "CartScreen" component={CartScreen}/>
+        <Stack.Screen name ="CheckoutScreen" component={CheckoutScreen}/>
 
       </Stack.Navigator>
     </NavigationContainer>
+    </CartProvider>
   );
 }

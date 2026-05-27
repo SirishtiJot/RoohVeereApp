@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useCart } from '../context/CartContext';
 import {
   StyleSheet,
   Text,
@@ -151,7 +152,7 @@ export default function ProductDescriptionScreen({ route, navigation }) {
   const product = ALL_PRODUCTS[productId];
 
   const [selectedSize, setSelectedSize] = useState('50 ML');
-
+const { addToBag } = useCart();
   if (!product) {
     return (
       <View style={styles.container}>
@@ -172,7 +173,9 @@ export default function ProductDescriptionScreen({ route, navigation }) {
           <Icon name="arrow-back" size={22} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerLogo}>ROOH VEERE</Text>
-        <TouchableOpacity style={styles.bagBtn}>
+        <TouchableOpacity style={styles.bagBtn}
+        onPress={() => navigation.navigate('CartScreen')}
+        >
           <Icon name="bag-handle-outline" size={22} color="#000" />
         </TouchableOpacity>
       </View>
@@ -242,16 +245,21 @@ export default function ProductDescriptionScreen({ route, navigation }) {
         </View>
       </ScrollView>
 
-      {/* STICKY ADD TO BAG */}
+ {/* STICKY ADD TO BAG */}
       <View style={styles.stickyFooter}>
         <TouchableOpacity
           style={styles.addToBagBtn}
-          onPress={() => alert(`${product.name} (${selectedSize}) added to bag!`)}
+          activeOpacity={0.8}
+          onPress={() => {
+            addToBag(product, selectedSize); 
+            alert(`${product.name} (${selectedSize}) added to your bag!`);
+          }}
         >
           <Icon name="bag-handle-outline" size={16} color="#FFF" style={{ marginRight: 8 }} />
           <Text style={styles.addToBagText}>ADD TO BAG — {currentPrice}</Text>
         </TouchableOpacity>
       </View>
+
     </View>
   );
 }
@@ -266,7 +274,7 @@ function NoteColumn({ label, notes, icon }) {
       ))}
     </View>
   );
-}
+}[]
 
 function DetailItem({ icon, label, value }) {
   return (
