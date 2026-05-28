@@ -63,11 +63,13 @@ export default function CreateAccountScreen({ navigation }) {
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      
       // Save display name to Firebase profile
       await updateProfile(userCredential.user, { displayName: name.trim() });
+      
       showAlert(
         'Account Created!',
-        `Welcome, ${name.trim()}! Your account has been created.`,
+        `Welcome, ${name.trim()}! Your account has been created successfully.`,
         () => navigation.replace('Home')
       );
     } catch (error) {

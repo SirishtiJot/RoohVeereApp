@@ -12,11 +12,7 @@ import {
   ScrollView,
 } from 'react-native';
 import Icon from '@expo/vector-icons/Ionicons';
-import {
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-  fetchSignInMethodsForEmail,
-} from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth } from '../firebase';
 
@@ -63,21 +59,10 @@ export default function LoginScreen({ navigation }) {
 
     setLoading(true);
     try {
-      // Step 1: check if account exists for this email
-      const methods = await fetchSignInMethodsForEmail(auth, email.trim());
-      if (methods.length === 0) {
-        showAlert(
-          'Account Not Found',
-          'No account exists with this email. Please create an account first.'
-        );
-        setLoading(false);
-        return;
-      }
-
-      // Step 2: attempt sign in
+      // Direct Sign In (Firebase email/password dono khud check kar lega)
       await signInWithEmailAndPassword(auth, email.trim(), password);
 
-      // Step 3: save credentials on success
+      // Save credentials on success
       await AsyncStorage.setItem(SAVED_EMAIL_KEY, email.trim());
       await AsyncStorage.setItem(SAVED_PASSWORD_KEY, password);
 
@@ -86,9 +71,12 @@ export default function LoginScreen({ navigation }) {
     } catch (error) {
       console.log('Firebase auth error:', error.code, error.message);
       switch (error.code) {
+        case 'auth/user-not-found':
+          showAlert('Account Not Found', 'No account exists with this email. Please create an account first.');
+          break;
         case 'auth/wrong-password':
         case 'auth/invalid-credential':
-          showAlert('Wrong Password', 'The password you entered is incorrect. Please try again.');
+          showAlert('Wrong Password', 'The email or password you entered is incorrect. Please try again.');
           break;
         case 'auth/invalid-email':
           showAlert('Invalid Email', 'Please enter a valid email address.');
@@ -100,7 +88,7 @@ export default function LoginScreen({ navigation }) {
           showAlert('No Internet', 'Please check your internet connection and try again.');
           break;
         default:
-          showAlert('Login Failed', `Error: ${error.code}\n\nPlease try again.`);
+          showAlert('Login Failed', 'Invalid email or password. Please try again.');
       }
     } finally {
       setLoading(false);

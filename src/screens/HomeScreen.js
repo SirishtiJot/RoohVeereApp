@@ -35,7 +35,7 @@ const LUXURY_PRODUCTS = [
   { id: '5', name: 'Evergreen', type: 'For Him', prices: { '50 ML': 'PKR 2,190', '100 ML': 'PKR 3,800' }, image: require('../../assets/evergreen.png') },
   { id: '6', name: 'Florenza', type: 'For Her', prices: { '50 ML': 'PKR 2,590', '100 ML': 'PKR 4,690' }, image: require('../../assets/florenza.png') }, 
   { id: '7', name: 'Crystela', type: 'For Her', prices: { '50 ML': 'PKR 2,199 ', '100 ML': 'PKR 3,790' }, image: require('../../assets/crystela.png') },
-  { id: '8', name: 'Waves', type: 'For Her', prices: { '50 ML': 'PKR 2,399', '100 ML': 'PKR 4,290' }, image: require('../../assets/waves.png') }, 
+  { id: '8', name: 'Waves', type: 'For Him', prices: { '50 ML': 'PKR 2,399', '100 ML': 'PKR 4,290' }, image: require('../../assets/waves.png') }, 
 ];
 
 // ✅ Added `navigation` prop

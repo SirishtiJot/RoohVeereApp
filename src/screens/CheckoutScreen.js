@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useCart } from '../context/CartContext';
 import { db } from '../firebase';
-import { collection,addDoc, serverTimestamp } from 'firebase/firestore';
-
-const { width } = Dimensions.get('window');
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function CheckoutScreen({ navigation }) {
   const { cartItems, getCartTotal, setCartItems } = useCart();
@@ -13,46 +11,35 @@ export default function CheckoutScreen({ navigation }) {
 
   const handlePlaceOrder = async () => {
     if (!form.name.trim() || !form.phone.trim() || !form.address.trim() || !form.city.trim()) {
-      Alert.alert('Details Missing', 'Please fill all the fields to deliver your signature scent.');
+      alert('Details Missing: Please fill all the fields to deliver your signature scent.');
       return;
     }
-    try{
-        const orderRef = await addDoc(collection(db ,"orders"), {
-            customerName: form.name,
-            customerPhone: form.phone,
-            customerAddress: form.address,
-            customerCity: form.city,
-            cartItems: cartItems, // Aapki cart items ki array (perfumes jo khareede)
-            totalAmount: getCartTotal(), // Total bill jo PKR mein bana
-            status: "Pending", // Naya order hamesha pending hota hai
-         createdAt: serverTimestamp()
-        });
+
+    try {
+      await addDoc(collection(db, "orders"), {
+        customerName: form.name,
+        customerPhone: form.phone,
+        customerAddress: form.address,
+        customerCity: form.city,
+        cartItems: cartItems || [], 
+        totalAmount: getCartTotal() || 0, 
+        status: "Pending", 
+        createdAt: serverTimestamp()
+      });
     
-    
-    // Success Dialog
-    Alert.alert(
-      'Order Confirmed! 👑',
-      `Thank you ${form.name},\n\nYour ROOH VEERE order valued at PKR ${getCartTotal().toLocaleString()} has been successfully placed via Cash on Delivery.\n\nExpect delivery within 2-3 working days!`,
-      [
-        { 
-          text: 'Great!', 
-          onPress: () => {
-            // Order place hone ke baad cart khali kar dein
-            if (setCartItems) setCartItems([]); 
-            navigation.navigate('Home');
-          }
-        }
-      ]
-    );
-  }catch (error){
-    console.error("Firebase Error: ", error);
-    alert("Something went wrong while placing the order. Please try again.");
-  }
+      alert(`Order Confirmed! 👑\n\nThank you ${form.name},\nYour ROOH VEERE order valued at PKR ${getCartTotal().toLocaleString()} has been successfully placed via Cash on Delivery.\n\nExpect delivery within 2-3 working days!`);
+
+      if (setCartItems) setCartItems([]); 
+      navigation.navigate('Home');
+
+    } catch (error) {
+      console.error("Firebase Error: ", error);
+      alert("Something went wrong while placing the order. Please try again.");
+    }
   };
 
   return (
     <View style={styles.container}>
-      
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Icon name="arrow-back" size={22} color="#000" />
@@ -62,7 +49,6 @@ export default function CheckoutScreen({ navigation }) {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
-        
         <Text style={styles.sectionLabel}>SHIPPING ADDRESS</Text>
         
         <TextInput 
@@ -74,7 +60,7 @@ export default function CheckoutScreen({ navigation }) {
         />
         <TextInput 
           style={styles.input} 
-          placeholder="Phone Number (e.g., 03001234567)" 
+          placeholder="Phone Number" 
           placeholderTextColor="#999"
           keyboardType="phone-pad"
           value={form.phone}
@@ -82,22 +68,20 @@ export default function CheckoutScreen({ navigation }) {
         />
         <TextInput 
           style={[styles.input, { height: 80, textAlignVertical: 'top', paddingTop: 12 }]} 
-          placeholder="Complete Street Address, Apartment, Sector" 
+          placeholder="Complete Street Address" 
           placeholderTextColor="#999"
           multiline
           value={form.address}
           onChangeText={(val) => setForm({...form, address: val})}
         />
-        {/* Dynamic City Input Field */}
-<TextInput 
-  style={styles.input} 
-  placeholder="City (e.g., Lahore, Islamabad, Karachi)" 
-  placeholderTextColor="#999"
-  value={form.city}
-  onChangeText={(val) => setForm({...form, city: val})} // 👈 Ab yeh typeable ho gayi hai!
-/>
+        <TextInput 
+          style={styles.input} 
+          placeholder="City" 
+          placeholderTextColor="#999"
+          value={form.city}
+          onChangeText={(val) => setForm({...form, city: val})} 
+        />
 
-        
         <Text style={[styles.sectionLabel, { marginTop: 25 }]}>PAYMENT METHOD</Text>
         <View style={styles.paymentBox}>
           <Icon name="cash-outline" size={20} color="#000" />
@@ -109,7 +93,7 @@ export default function CheckoutScreen({ navigation }) {
         <View style={styles.summaryBox}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLeft}>Total Items</Text>
-            <Text style={styles.summaryRight}>{cartItems.length} Products</Text>
+            <Text style={styles.summaryRight}>{cartItems ? cartItems.length : 0} Products</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLeft}>Delivery Charges</Text>
@@ -117,12 +101,11 @@ export default function CheckoutScreen({ navigation }) {
           </View>
           <View style={[styles.summaryRow, { marginTop: 12, borderTopWidth: 1, borderColor: '#EEE', paddingTop: 12 }]}>
             <Text style={styles.totalLeft}>Amount to Pay</Text>
-            <Text style={styles.totalRight}>PKR {getCartTotal().toLocaleString()}</Text>
+            <Text style={styles.totalRight}>PKR {getCartTotal() ? getCartTotal().toLocaleString() : 0}</Text>
           </View>
         </View>
       </ScrollView>
 
-       
       <View style={styles.footer}>
         <TouchableOpacity style={styles.confirmBtn} onPress={handlePlaceOrder}>
           <Text style={styles.confirmBtnText}>PLACE ORDER (COD)</Text>
