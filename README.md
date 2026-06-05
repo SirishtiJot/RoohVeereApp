@@ -6,7 +6,7 @@ A premium, high-end React Native cross-platform mobile and web application dedic
 
 ##  Live Production Deployment
 The application has been successfully deployed and optimized for cross-platform web browsers. 
-🔗 **Experience Luxury Live:** [https://rooh-veere-rmt1470b5-sirishtijots-projects.vercel.app](https://rooh-veere-rmt1470b5-sirishtijots-projects.vercel.app)
+🔗 **Experience Luxury Live:** [https://rooh-veere-app.vercel.app/](https://rooh-veere-app.vercel.app/)
 
 ---
 
